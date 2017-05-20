@@ -54,6 +54,16 @@ Example of reading from an IQ file:
 
 ./ham2mon.py -a "file=gqrx.raw,rate=8E6,repeat=false,throttle=true,freq=466E6" -r 8E6 -w
 
+##Channel Detection Log File
+
+For console operation, it is possible to specify the log file name, in
+which channel detection, and removal will be logged. The option is
+`--log_file=<file-name>`.
+
+Whenever a channel appears/dissapears, new line will be written in the
+log file. For the line format, check `__print_channel_log__()` in
+`scanner.Scanner`.
+
 ##GUI Controls:
 
 `t/r = Detection threshold +/- 5 dB`
