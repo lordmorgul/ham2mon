@@ -10,6 +10,7 @@ import receiver as recvr
 import estimate
 import parser as prsr
 import time
+import datetime
 import numpy as np
 import sys
 
@@ -53,7 +54,7 @@ class Scanner(object):
     def __init__(self, ask_samp_rate=4E6, num_demod=4, type_demod=0,
                  hw_args="uhd", freq_correction=0, record=True,
                  lockout_file_name="", priority_file_name="", play=True,
-                 audio_bps=8):
+                 audio_bps=8, channel_log_file_name=""):
 
         # Default values
         self.gain_db = 30
@@ -70,6 +71,7 @@ class Scanner(object):
         self.channel_spacing = 5000
         self.lockout_file_name = lockout_file_name
         self.priority_file_name = priority_file_name
+        self.channel_log_file_name = channel_log_file_name
 
         # Create receiver object
         self.receiver = recvr.Receiver(ask_samp_rate, num_demod, type_demod,
@@ -80,9 +82,34 @@ class Scanner(object):
         self.samp_rate = self.receiver.samp_rate
         self.center_freq = self.receiver.center_freq
 
+        # Open channel log file for appending data, if it is specified
+        if channel_log_file_name != "":
+            self.channel_log_file = open(channel_log_file_name, 'a')
+        else:
+            self.channel_log_file = None
+
         # Start the receiver and wait for samples to accumulate
         self.receiver.start()
         time.sleep(1)
+
+    def __del__(self):
+        self.channel_log_file.close()
+
+    def __print_channel_log__(self, freq, state):
+        if self.channel_log_file is not None:
+            state_str = {True: "on", False: "off"}
+
+            now = datetime.datetime.now()
+
+            self.channel_log_file.write(
+                    "{}: {:<4}{:>13}{:>7}{:>7}\n".format(
+                        now.strftime("%Y-%m-%d, %H:%M:%S.%f"),
+                        state_str[state],
+                        self.center_freq + freq,
+                        self.gain_db,
+                        self.threshold_db))
+
+            self.channel_log_file.flush()
 
     def scan_cycle(self):
         """Execute one scan cycle
@@ -144,7 +171,13 @@ class Scanner(object):
 
         # Set demodulators that are no longer in channel list to 0 Hz
         for demodulator in self.receiver.demodulators:
-            if demodulator.center_freq not in channels:
+            if (demodulator.center_freq != 0) and \
+                    (demodulator.center_freq not in channels):
+
+                # Write in channel log file that the channel is off
+                demodulator_freq = demodulator.center_freq
+                self.__print_channel_log__(demodulator_freq, False)
+
                 demodulator.set_center_freq(0, self.center_freq)
             else:
                 pass
@@ -162,6 +195,9 @@ class Scanner(object):
                         demodulator.set_center_freq(channel, self.center_freq)
                     else:
                         pass
+
+                # Write in channel log file that the channel is on
+                self.__print_channel_log__(channel, True)
             else:
                 pass
 

@@ -97,6 +97,11 @@ class CLParser(object):
                           default=8,
                           help="Audio bit depth (bps)")
 
+        parser.add_option("--log_file", type="string",
+                          dest="channel_log_file_name",
+                          default="",
+                          help="Log file for channel detection")
+
         options = parser.parse_args()[0]
         self.parser_args = parser.parse_args()[1]
 
@@ -115,6 +120,7 @@ class CLParser(object):
         self.priority_file_name = str(options.priority_file_name)
         self.freq_correction = int(options.freq_correction)
         self.audio_bps = int(options.audio_bps)
+        self.channel_log_file_name = str(options.channel_log_file_name)
 
 
 def main():
