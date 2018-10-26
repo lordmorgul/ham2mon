@@ -12,6 +12,7 @@ import parser as prsr
 import time
 import numpy as np
 import sys
+import syslog
 
 class Scanner(object):
     """Scanner that controls receiver
@@ -30,6 +31,7 @@ class Scanner(object):
         freq_correction (int): Frequency correction in ppm
         record (bool): Record audio to file if True
         audio_bps (int): Audio bit depth in bps (bits/samples)
+        max_demod_length (int): Maximum demod time in seconds (0=disable)
 
     Attributes:
         center_freq (float): Hardware RF center frequency in Hz
@@ -53,7 +55,7 @@ class Scanner(object):
     def __init__(self, ask_samp_rate=4E6, num_demod=4, type_demod=0,
                  hw_args="uhd", freq_correction=0, record=True,
                  lockout_file_name="", priority_file_name="", play=True,
-                 audio_bps=8):
+                 audio_bps=8, max_demod_length=0):
 
         # Default values
         self.gain_db = 0
@@ -72,6 +74,8 @@ class Scanner(object):
         self.channel_spacing = 5000
         self.lockout_file_name = lockout_file_name
         self.priority_file_name = priority_file_name
+        self.max_demod_length = max_demod_length
+        self.demod_starts = {}   # track start of demodulation for duration limit option
 
         # Create receiver object
         self.receiver = recvr.Receiver(ask_samp_rate, num_demod, type_demod,
@@ -143,6 +147,20 @@ class Scanner(object):
             else:
                 pass
         channels = temp
+
+        # stop long running demods
+        starts = {}
+        for demodulator in self.receiver.demodulators:
+            if self.demod_starts.has_key(demodulator.center_freq):
+                if time.time() - self.demod_starts[demodulator.center_freq] > self.max_demod_length:
+                    syslog.syslog('freq too long %s' % demodulator.center_freq)
+                    demodulator.set_center_freq(0, self.center_freq)
+                elif demodulator.center_freq <> 0:
+                    starts[demodulator.center_freq] = self.demod_starts[demodulator.center_freq]
+            else:
+                starts[demodulator.center_freq] = time.time()
+
+        self.demod_starts = starts
 
         # Set demodulators that are no longer in channel list to 0 Hz
         for demodulator in self.receiver.demodulators:
