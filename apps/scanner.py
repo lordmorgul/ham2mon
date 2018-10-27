@@ -12,7 +12,6 @@ import parser as prsr
 import time
 import numpy as np
 import sys
-import syslog
 
 class Scanner(object):
     """Scanner that controls receiver
@@ -75,7 +74,6 @@ class Scanner(object):
         self.lockout_file_name = lockout_file_name
         self.priority_file_name = priority_file_name
         self.max_demod_length = max_demod_length
-        self.demod_starts = {}   # track start of demodulation for duration limit option
 
         # Create receiver object
         self.receiver = recvr.Receiver(ask_samp_rate, num_demod, type_demod,
@@ -148,20 +146,6 @@ class Scanner(object):
                 pass
         channels = temp
 
-        # stop long running demods
-        starts = {}
-        for demodulator in self.receiver.demodulators:
-            if self.demod_starts.has_key(demodulator.center_freq):
-                if time.time() - self.demod_starts[demodulator.center_freq] > self.max_demod_length:
-                    syslog.syslog('freq too long %s' % demodulator.center_freq)
-                    demodulator.set_center_freq(0, self.center_freq)
-                elif demodulator.center_freq <> 0:
-                    starts[demodulator.center_freq] = self.demod_starts[demodulator.center_freq]
-            else:
-                starts[demodulator.center_freq] = time.time()
-
-        self.demod_starts = starts
-
         # Set demodulators that are no longer in channel list to 0 Hz
         for demodulator in self.receiver.demodulators:
             if demodulator.center_freq not in channels:
@@ -184,6 +168,14 @@ class Scanner(object):
                         pass
             else:
                 pass
+
+        # Stop any long running demodulators
+        if self.max_demod_length > 0:
+            for demodulator in self.receiver.demodulators:
+                if (demodulator.center_freq > 0) and \
+                        (int(time.time()) - demodulator.time_stamp > \
+                                                        self.max_demod_length):
+                    demodulator.set_center_freq(0, self.center_freq)
 
         # Create an tuned channel list of strings for the GUI
         # If channel is a zero then use an empty string
