@@ -11,8 +11,6 @@ import curses
 import cursesgui
 import parser
 import time
-import syslog
-import pprint
 
 def main(screen):
     """Start scanner with GUI interface
