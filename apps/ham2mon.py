@@ -11,6 +11,8 @@ import curses
 import cursesgui
 import parser
 import time
+import syslog
+import pprint
 
 def main(screen):
     """Start scanner with GUI interface
@@ -60,19 +62,16 @@ def main(screen):
 
     # Set the paramaters
     scanner.set_center_freq(PARSER.center_freq)
-    scanner.set_gain(PARSER.gain_db)
-    scanner.set_if_gain(PARSER.if_gain_db)
-    scanner.set_bb_gain(PARSER.bb_gain_db)
+
     scanner.set_squelch(PARSER.squelch_db)
     scanner.set_volume(PARSER.volume_db)
     scanner.set_threshold(PARSER.threshold_db)
 
+    rxwin.gains = scanner.filter_and_set_gains(PARSER.gains)
+
     # Get the initial settings for GUI
     rxwin.center_freq = scanner.center_freq
     rxwin.samp_rate = scanner.samp_rate
-    rxwin.gain_db = scanner.gain_db
-    rxwin.if_gain_db = scanner.if_gain_db
-    rxwin.bb_gain_db = scanner.bb_gain_db
     rxwin.squelch_db = scanner.squelch_db
     rxwin.volume_db = scanner.volume_db
     rxwin.record = scanner.record
@@ -112,15 +111,8 @@ def main(screen):
             rxwin.center_freq = scanner.center_freq
 
         if rxwin.proc_keyb_soft(keyb):
-            # Set and update RF gain
-            scanner.set_gain(rxwin.gain_db)
-            rxwin.gain_db = scanner.gain_db
-            # Set and update IF gain
-            scanner.set_if_gain(rxwin.if_gain_db)
-            rxwin.if_gain_db = scanner.if_gain_db
-            # Set and update BB gain
-            scanner.set_bb_gain(rxwin.bb_gain_db)
-            rxwin.bb_gain_db = scanner.bb_gain_db
+            # Set all the gains
+            rxwin.gains = scanner.set_gains(rxwin.gains)
             # Set and update squelch
             scanner.set_squelch(rxwin.squelch_db)
             rxwin.squelch_db = scanner.squelch_db

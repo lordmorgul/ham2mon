@@ -56,9 +56,6 @@ class Scanner(object):
                  audio_bps=8):
 
         # Default values
-        self.gain_db = 0
-        self.if_gain_db = 16
-        self.bb_gain_db = 16
         self.squelch_db = -60
         self.volume_db = 0
         self.threshold_db = 10
@@ -273,32 +270,19 @@ class Scanner(object):
         # Clear the lockout since frequency is changing
         self.clear_lockout()
 
-    def set_gain(self, gain_db):
-        """Sets gain of RF hardware
-
-        Args:
-            gain_db (float): Hardware RF gain in dB
+    def filter_and_set_gains(self, all_gains):
+        """Set the supported gains and return them
         """
-        self.receiver.set_gain(gain_db)
-        self.gain_db = self.receiver.gain_db
+        self.gains = self.receiver.filter_and_set_gains(all_gains)
+        return self.gains
 
-    def set_if_gain(self, if_gain_db):
-        """Sets IF gain of RF hardware
-
+    def set_gains(self, gains):
+        """Set all the gains
         Args:
-            if_gain_db (float): Hardware IF gain in dB
+            gains (dictionary): Supported gains in dB
         """
-        self.receiver.set_if_gain(if_gain_db)
-        self.if_gain_db = self.receiver.if_gain_db
-
-    def set_bb_gain(self, bb_gain_db):
-        """Sets BB gain of RF hardware
-
-        Args:
-            bb_gain_db (float): Hardware BB gain in dB
-        """
-        self.receiver.set_bb_gain(bb_gain_db)
-        self.bb_gain_db = self.receiver.bb_gain_db
+        self.gains = self.receiver.set_gains(gains)
+        return self.gains
 
     def set_squelch(self, squelch_db):
         """Sets squelch of all demodulators
@@ -366,13 +350,12 @@ def main():
 
     # Set frequency, gain, squelch, and volume
     scanner.set_center_freq(parser.center_freq)
-    scanner.set_gain(parser.gain_db)
-    scanner.set_if_gain(parser.if_gain_db)
-    scanner.set_bb_gain(parser.bb_gain_db)
     print "\n"
     print "Started %s at %.3f Msps" % (hw_args, scanner.samp_rate/1E6)
-    print "RX at %.3f MHz with %d dB gain" % (scanner.center_freq/1E6,
-                                              scanner.gain_db)
+    print "RX at %.3f MHz" % (scanner.center_freq/1E6)
+    scanner.filter_and_set_gains(parser.gains)
+    for gain in scanner.gains:
+        print "gain %s at %d dB" % (gain["name"], gain["value"])
     scanner.set_squelch(parser.squelch_db)
     scanner.set_volume(parser.volume_db)
     print "%d demods of type %d at %d dB squelch and %d dB volume" % \
