@@ -515,6 +515,8 @@ class Receiver(gr.top_block):
 
     def filter_and_set_gains(self, all_gains):
         """Remove unsupported gains and set them
+        Args:
+            all_gains (list of dictionary): Supported gains in dB
         """
         gains = []
         names = self.get_gain_names()
@@ -526,7 +528,7 @@ class Receiver(gr.top_block):
     def set_gains(self, gains):
         """Set all the gains
         Args:
-            gains (array of dictionary): Supported gains in dB
+            gains (list of dictionary): Supported gains in dB
         """
         for gain in gains:
             self.src.set_gain(gain["value"], gain["name"])

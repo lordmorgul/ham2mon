@@ -272,6 +272,8 @@ class Scanner(object):
 
     def filter_and_set_gains(self, all_gains):
         """Set the supported gains and return them
+        Args:
+            all_gains (list of dictionary): Supported gains in dB
         """
         self.gains = self.receiver.filter_and_set_gains(all_gains)
         return self.gains
@@ -279,7 +281,7 @@ class Scanner(object):
     def set_gains(self, gains):
         """Set all the gains
         Args:
-            gains (dictionary): Supported gains in dB
+            gains (list of dictionary): Supported gains in dB
         """
         self.gains = self.receiver.set_gains(gains)
         return self.gains

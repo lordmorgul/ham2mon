@@ -150,7 +150,7 @@ def main():
     print "center_freq:         " + str(parser.center_freq)
     print "ask_samp_rate:       " + str(parser.ask_samp_rate)
     for gain in parser.gains:
-                print "gain %s at %d dB" % (gain["name"], gain["value"])
+        print "gain %s at %d dB" % (gain["name"], gain["value"])
     print "squelch_db:          " + str(parser.squelch_db)
     print "volume_db:           " + str(parser.volume_db)
     print "threshold_db:        " + str(parser.threshold_db)
