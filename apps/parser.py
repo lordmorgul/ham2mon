@@ -68,7 +68,7 @@ class CLParser(object):
         parser.add_option("-j", "--lna_gain", type="eng_float", dest="lna_gain_db",
                           default=8, help="Hardware LNA gain index")
 
-        parser.add_option("-k", "--mix_gain", type="eng_float", dest="mix_gain_db",
+        parser.add_option("-x", "--mix_gain", type="eng_float", dest="mix_gain_db",
                           default=5, help="Hardware MIX gain index")
 
         parser.add_option("-s", "--squelch", type="eng_float",
