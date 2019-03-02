@@ -51,12 +51,13 @@ class BaseTuner(gr.hier_block2):
         if self.center_freq == 0 or not self.record:
             # If tuner at zero Hz, or record false, then file name to /dev/null
             file_name = "/dev/null"
+            tstamp = 0
         else:
             # Otherwise use frequency and time stamp for file name
-            tstamp = "_" + str(int(time.time()))
+            tstamp = int(time.time())
             file_freq = (rf_center_freq + self.center_freq)/1E6
             file_freq = np.round(file_freq, 3)
-            file_name = 'wav/' + '{:.3f}'.format(file_freq) + tstamp + ".wav"
+            file_name = 'wav/' + '{:.3f}'.format(file_freq) + "_" + str(tstamp) + ".wav"
 
             # Make sure the 'wav' directory exists
             try:
@@ -66,6 +67,7 @@ class BaseTuner(gr.hier_block2):
 
         self.file_name = file_name
         self.blocks_wavfile_sink.open(self.file_name)
+        self.time_stamp = tstamp
 
     def _delete_wavfile_if_empty(self):
         """Delete the current wavfile if it's empty."""
@@ -140,6 +142,7 @@ class TunerDemodNBFM(BaseTuner):
 
         # Default values
         self.center_freq = 0
+        self.time_stamp = 0
         squelch_db = -60
         self.quad_demod_gain = 0.050
         self.file_name = "/dev/null"

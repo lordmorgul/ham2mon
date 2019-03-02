@@ -30,6 +30,7 @@ class Scanner(object):
         freq_correction (int): Frequency correction in ppm
         record (bool): Record audio to file if True
         audio_bps (int): Audio bit depth in bps (bits/samples)
+        max_demod_length (int): Maximum demod time in seconds (0=disable)
 
     Attributes:
         center_freq (float): Hardware RF center frequency in Hz
@@ -53,7 +54,7 @@ class Scanner(object):
     def __init__(self, ask_samp_rate=4E6, num_demod=4, type_demod=0,
                  hw_args="uhd", freq_correction=0, record=True,
                  lockout_file_name="", priority_file_name="", play=True,
-                 audio_bps=8):
+                 audio_bps=8, max_demod_length=0):
 
         # Default values
         self.squelch_db = -60
@@ -69,6 +70,7 @@ class Scanner(object):
         self.channel_spacing = 5000
         self.lockout_file_name = lockout_file_name
         self.priority_file_name = priority_file_name
+        self.max_demod_length = max_demod_length
 
         # Create receiver object
         self.receiver = recvr.Receiver(ask_samp_rate, num_demod, type_demod,
@@ -163,6 +165,14 @@ class Scanner(object):
                         pass
             else:
                 pass
+
+        # Stop any long running demodulators
+        if self.max_demod_length > 0:
+            for demodulator in self.receiver.demodulators:
+                if (demodulator.center_freq > 0) and \
+                        (int(time.time()) - demodulator.time_stamp > \
+                                                        self.max_demod_length):
+                    demodulator.set_center_freq(0, self.center_freq)
 
         # Create an tuned channel list of strings for the GUI
         # If channel is a zero then use an empty string
