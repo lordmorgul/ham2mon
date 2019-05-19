@@ -169,7 +169,7 @@ class Scanner(object):
         # Stop any long running demodulators
         if self.max_demod_length > 0:
             for demodulator in self.receiver.demodulators:
-                if (demodulator.center_freq > 0) and \
+                if (demodulator.time_stamp > 0) and \
                         (int(time.time()) - demodulator.time_stamp > \
                                                         self.max_demod_length):
                     demodulator.set_center_freq(0, self.center_freq)
